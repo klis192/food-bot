@@ -9,11 +9,6 @@ pipeline {
         TELEGRAM_CREDS_ID = 'telegram-bot-token'
     }
 
-    triggers {
-        // Опрашивать репо каждые 5 минут на новые коммиты
-        pollSCM('H/5 * * * *')
-    }
-
     stages {
 
         stage('Checkout') {
