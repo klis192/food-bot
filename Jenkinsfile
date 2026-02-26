@@ -68,15 +68,13 @@ pipeline {
                         usernameVariable: 'GIT_USER',
                         passwordVariable: 'GIT_TOKEN'
                     )]) {
-                        sh """
+                        sh '''
                             git config user.email "jenkins@ci.local"
                             git config user.name "Jenkins CI"
-
-                            git checkout -b ${newBranch}
-                            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/klis192/food-bot.git ${newBranch}
-
-                            echo "Branch '${newBranch}' successfully pushed."
-                        """
+                        '''
+                        sh "git checkout -b ${newBranch}"
+                        sh 'git push https://$GIT_USER:$GIT_TOKEN@github.com/klis192/food-bot.git ' + newBranch
+                        echo "Branch '${newBranch}' successfully pushed."
                     }
                 }
             }
