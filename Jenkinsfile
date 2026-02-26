@@ -2,9 +2,11 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO_URL    = 'https://github.com/klis192/food-bot.git'
-        GIT_CREDENTIALS = 'github-token'   // ID credentials в Jenkins
-        BASE_BRANCH     = 'main'
+        GIT_REPO_URL      = 'https://github.com/klis192/food-bot.git'
+        GIT_CREDENTIALS   = 'github-token'
+        BASE_BRANCH       = 'main'
+        TELEGRAM_CHAT_ID  = '1038486996'
+        TELEGRAM_CREDS_ID = 'telegram-bot-token'
     }
 
     triggers {
@@ -84,9 +86,25 @@ pipeline {
     post {
         success {
             echo "Pipeline completed. New branch: tested/${env.BUILD_NUMBER}"
+            withCredentials([string(credentialsId: env.TELEGRAM_CREDS_ID, variable: 'TG_TOKEN')]) {
+                sh '''
+                    curl -s -X POST https://api.telegram.org/bot$TG_TOKEN/sendMessage \
+                        -d chat_id=$TELEGRAM_CHAT_ID \
+                        -d parse_mode=HTML \
+                        -d text="✅ <b>food-bot CI</b>%0ABuild <b>#$BUILD_NUMBER</b> прошёл успешно%0AВетка: <code>tested/$BUILD_NUMBER</code>"
+                '''
+            }
         }
         failure {
             echo "Tests FAILED. Branch was NOT created."
+            withCredentials([string(credentialsId: env.TELEGRAM_CREDS_ID, variable: 'TG_TOKEN')]) {
+                sh '''
+                    curl -s -X POST https://api.telegram.org/bot$TG_TOKEN/sendMessage \
+                        -d chat_id=$TELEGRAM_CHAT_ID \
+                        -d parse_mode=HTML \
+                        -d text="❌ <b>food-bot CI</b>%0ABuild <b>#$BUILD_NUMBER</b> упал%0AВетка <code>tested/$BUILD_NUMBER</code> не создана"
+                '''
+            }
         }
         cleanup {
             sh 'rm -rf .venv food_bot.db'
