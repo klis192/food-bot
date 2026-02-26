@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.12-slim'
+            args '--user root'
+        }
+    }
 
     environment {
         GIT_REPO_URL    = 'https://github.com/klis192/food-bot.git'
@@ -26,9 +31,6 @@ pipeline {
         stage('Setup Python') {
             steps {
                 sh '''
-                    apt-get update -qq && apt-get install -y -qq python3 python3-pip python3-venv
-                    python3 -m venv .venv
-                    . .venv/bin/activate
                     pip install --quiet --upgrade pip
                     pip install --quiet -r requirements.txt
                     pip install --quiet pytest pytest-cov
@@ -39,7 +41,6 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''
-                    . .venv/bin/activate
                     pytest tests/ \
                         --tb=short \
                         --junitxml=test-results.xml \
@@ -92,7 +93,7 @@ pipeline {
             echo "Tests FAILED. Branch was NOT created."
         }
         cleanup {
-            sh 'rm -rf .venv food_bot.db'
+            sh 'rm -f food_bot.db'
         }
     }
 }
